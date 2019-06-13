@@ -1,13 +1,13 @@
 import TokenSdk
 
 class token: CDVPlugin {
-    
-    //global settings
+    // global settings
     static let developerKey: String = "4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI"
     static let env: TokenCluster = TokenCluster.sandbox()
     static let realm = "at-bisb"
     static let recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq"
     static let aliasType = Alias_Type.phone
+    static let testRealm = "at-kfho"
     
     // create and return a token client object
     
@@ -60,7 +60,7 @@ class token: CDVPlugin {
         
         // wait for async and notify main
         dispatchGrp.notify(queue: .main) {
-            print("main notified with member: ", memberId)
+            print("main notified by member: ", memberId)
             if memberId == "" {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_ERROR,
@@ -115,7 +115,7 @@ class token: CDVPlugin {
         
         // wait for async and notify main
         dispatchGrp.notify(queue: .main) {
-            print("main notified with member: ", memberId)
+            print("main notified by member: ", memberId)
             if subscriberId == "" {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_ERROR,
@@ -134,9 +134,6 @@ class token: CDVPlugin {
         }
     }
     
-    
-    
-    
     // pass access token and link accounts
     
     @objc(linkAccounts:)
@@ -149,35 +146,38 @@ class token: CDVPlugin {
         dispatchGrp.enter()
         
         // read from args
-        let memberId = argList.arguments[0] as? String ?? ""
-        let accessToken = argList.arguments[1] as? String ?? ""
-        print("linking accounts to a member using at: ", accessToken, " for member ",memberId)
-
         
-            getTokenClient().getMember(memberId, onSuccess: { Member in
-                Member.linkAccounts(token.realm,accessToken:accessToken, onSuccess: { accounts in
-                    if(accounts != nil){
-                        status = true
-                        print("linked: ", status)
-                        dispatchGrp.leave()
-                    }
-                }, onError: { (Error) in
-                    print("error during linking ", Error)
-                    error = Error.localizedDescription
+        var argArray = (argList.arguments[0] as AnyObject) as! [Any]
+        print("received arguments", argArray)
+        
+        var memberId: String = argArray[0] as! String
+        var accessToken: String = (argArray[1] as! String)+"|"+memberId
+        
+        print("linking accounts to member ",memberId," using at: ", accessToken)
+        
+        getTokenClient().getMember(memberId, onSuccess: { Member in
+            Member.linkAccounts(token.testRealm, accessToken: accessToken, onSuccess: { accounts in
+                print("accounts linked: ", accounts)
+                if accounts != nil {
+                    status = true
+                    print("linked: ", status)
                     dispatchGrp.leave()
-                })
-            }, onError: { (Error) in
-                print("member lookup error during linking ", Error)
+                }
+            }, onError: { Error in
+                print("error during linking ", Error)
                 error = Error.localizedDescription
                 dispatchGrp.leave()
             })
-        
-        
+        }, onError: { Error in
+            print("member lookup error during linking ", Error)
+            error = Error.localizedDescription
+            dispatchGrp.leave()
+        })
         
         // wait for async and notify main
         dispatchGrp.notify(queue: .main) {
-            print("main notified with member: ", memberId)
-            if status == true{
+            print("main notified by member: ", memberId)
+            if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
                     messageAs: status
@@ -194,7 +194,6 @@ class token: CDVPlugin {
             )
         }
     }
-    
     
     // pass member id to get the list of accounts
     
@@ -202,42 +201,40 @@ class token: CDVPlugin {
     func getAccounts(argList: CDVInvokedUrlCommand) {
         // local vars
         var status = Bool()
-        var accounts = String()
         var pluginResult = CDVPluginResult()
         var error = String()
+        var fetchedList = Array<Any>()
         let dispatchGrp = DispatchGroup()
         dispatchGrp.enter()
         
         // read from args
         let memberId = argList.arguments[0] as? String ?? ""
-        print("fetching linked accounts for member: ",memberId)
-        
+        print("fetching linked accounts for member: ", memberId)
         
         getTokenClient().getMember(memberId, onSuccess: { Member in
             Member.getAccounts({ accountList in
-                    print("fetched accounts: ", accountList)
-                    //accounts = accountList
-                    dispatchGrp.leave()
-            }, onError: { (Error) in
+                print("fetched accounts: ", accountList)
+                fetchedList = accountList
+                status = true
+                dispatchGrp.leave()
+            }, onError: { Error in
                 print("error during fetching linked accounts ", Error)
                 error = Error.localizedDescription
                 dispatchGrp.leave()
             })
-        }, onError: { (Error) in
+        }, onError: { Error in
             print("member lookup error during fetching linked accounts ", Error)
             error = Error.localizedDescription
             dispatchGrp.leave()
         })
         
-        
-        
         // wait for async and notify main
         dispatchGrp.notify(queue: .main) {
-            print("main notified with member: ", memberId)
-            if status == true{
+            print("main notified by member: ", memberId,status)
+            if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: fetchedList
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -251,5 +248,4 @@ class token: CDVPlugin {
             )
         }
     }
-    
 }

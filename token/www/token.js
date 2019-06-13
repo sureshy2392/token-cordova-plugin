@@ -11,3 +11,7 @@ exports.subscribe = function (arg0, success, error) {
 exports.linkAccounts = function (arg0, success, error) {
     exec(success, error, 'token', 'linkAccounts', [arg0]);
 };
+
+exports.getAccounts = function (arg0, success, error) {
+    exec(success, error, 'token', 'getAccounts', [arg0]);
+};
