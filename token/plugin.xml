@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com-token" version="0.0.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>token</name>
+    <js-module name="token" src="www/token.js">
+        <clobbers target="token" />
+    </js-module>
+	<platform name="ios">
+    <podspec>
+      <config>
+        <source url="https://github.com/tokenio/token-cocoa-pods.git" />
+        <source url="https://github.com/CocoaPods/Specs.git"/>
+      </config>
+      <pods use-frameworks="true">
+        <pod name="TokenSdk" />
+      </pods>
+    </podspec>
+
+	  <config-file target="config.xml" parent="/*">
+	    <feature name="token">
+	      <param name="ios-package" value="token" />
+	    </feature>
+	  </config-file>
+	  <source-file src="src/ios/token.swift" />
+	</platform>  
+</plugin>
