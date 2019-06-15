@@ -30,41 +30,41 @@ var app = {
         this.receivedEvent('deviceready');
         
         //create member call from cordova
-        token.createMember(
-                           {'mobileNumber':'+97333263351'},
-                           function(msg) {
-                           console.log("success",msg);
-                           },
-                           function(msg) {
-                           console.log("failure",msg);
-
-                           }
-                           );
+//        token.createMember(
+//                           {'mobileNumber':'+97333263351'},
+//                           function(msg) {
+//                           console.log("success",msg);
+//                           },
+//                           function(msg) {
+//                           console.log("failure",msg);
+//
+//                           }
+//                           );
         
 //        //subscription call from cordova
-        token.subscribe(
-                        {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq'},
-                           function(msg) {
-                           console.log("success",msg);
-                           },
-                           function(msg) {
-                           console.log("failure",msg);
-
-                           }
-                           );
+//        token.subscribe(
+//                        {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq'},
+//                           function(msg) {
+//                           console.log("success",msg);
+//                           },
+//                           function(msg) {
+//                           console.log("failure",msg);
+//
+//                           }
+//                           );
         
         
        // link accounts call - pass AT
-        token.linkAccounts(
-                           {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq','accessToken':'JQ+Hwn88Qp+V4ZW3F+CzT3wDUzGDdmBVuWaxm+VM78NE6mYgQshog8TT3FNgUiWhRixeKeB+G/UYhiKlJSj2razKhYYVIqME3JkhfnOO5X4LkmW7RjK7w0SAPtJdgzy8Pz65MBZcEOhWDY8vjaODfY99qmpETWj7J/8vTk21Stta7IQr1mYt5WQ8shf14PJSmdCAIT690jbnYBl6PlLcfjKzsUhF3IQa0NJG2exfuzr6Q/KSsotCCp+zLsmhYJ8KvbkgOjgp9fXW2PhOcUhi/apUu0jzm8Pec77Fe5aLiEqxRLw8qiAuXcmIEC22vTS24i0xPSqMdYL0xf2dA+68Bg=='},
-                        function(msg) {
-                        console.log("success",msg);
-                        },
-                        function(msg) {
-                        console.log("failure",msg);
-
-                        }
-                        );
+//        token.linkAccounts(
+//                           {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq','accessToken':'JQ+Hwn88Qp+V4ZW3F+CzT3wDUzGDdmBVuWaxm+VM78NE6mYgQshog8TT3FNgUiWhRixeKeB+G/UYhiKlJSj2razKhYYVIqME3JkhfnOO5X4LkmW7RjK7w0SAPtJdgzy8Pz65MBZcEOhWDY8vjaODfY99qmpETWj7J/8vTk21Stta7IQr1mYt5WQ8shf14PJSmdCAIT690jbnYBl6PlLcfjKzsUhF3IQa0NJG2exfuzr6Q/KSsotCCp+zLsmhYJ8KvbkgOjgp9fXW2PhOcUhi/apUu0jzm8Pec77Fe5aLiEqxRLw8qiAuXcmIEC22vTS24i0xPSqMdYL0xf2dA+68Bg=='},
+//                        function(msg) {
+//                        console.log("success",msg);
+//                        },
+//                        function(msg) {
+//                        console.log("failure",msg);
+//
+//                        }
+//                        );
 
         
         //link accounts call - pass AT
@@ -81,20 +81,34 @@ var app = {
         
         
                 //get linked accounts
-                token.getAccounts(
-                                  {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq'},
-                                   function(msg) {
-                                   console.log("success",msg);
-                                   },
-                                   function(msg) {
-                                   console.log("failure",msg);
-
-                                   }
-                                   );
+//                token.getAccounts(
+//                                  {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq'},
+//                                   function(msg) {
+//                                   console.log("success",msg);
+//                                   },
+//                                   function(msg) {
+//                                   console.log("failure",msg);
+//
+//                                   }
+//                                   );
  
-//get aisp consents
+        
+        //get account
+//                        token.getAccount(
+//                                          {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq','tokenAccountId':'a:DDmcyTDdV9EjLac1WTAJeBU2uLsMnWetix42v6pjZSqp:8QRouC2qXzi5'},
+//                                           function(msg) {
+//                                           console.log("success",msg);
+//                                           },
+//                                           function(msg) {
+//                                           console.log("failure",msg);
+//
+//                                           }
+//                                           );
+        
+        
+        //get aisp consents
 //        token.getConsents(
-//                          {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq','accounts':'someaccounts'},
+//                          {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq'},
 //                          function(msg) {
 //                          console.log("success",msg);
 //                          },
@@ -103,25 +117,14 @@ var app = {
 //
 //                          }
 //                          );
-//        
-        
-        
-        
-        //get aisp consents
-        token.getConsents(
-                          {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq'},
-                          function(msg) {
-                          console.log("success",msg);
-                          },
-                          function(msg) {
-                          console.log("failure",msg);
 
-                          }
-                          );
-
+//        {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq','accounts':['a:FYKyDCCKqpc6fhvNVCh4oBqhR5w4i3m6wn1FB6Vo3HuP:8QRouC2qXzi5','a:DDmcyTDdV9EjLac1WTAJeBU2uLsMnWetix42v6pjZSqp:8QRouC2qXzi5']'},
+//
+//
+        
         //unlink accounts
 //        token.unlinkAccounts(
-//                          {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq','accounts':['123','xyd']},
+//                          {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq','accounts':['a:FYKyDCCKqpc6fhvNVCh4oBqhR5w4i3m6wn1FB6Vo3HuP:8QRouC2qXzi5','a:DDmcyTDdV9EjLac1WTAJeBU2uLsMnWetix42v6pjZSqp:8QRouC2qXzi5']},
 //                          function(msg) {
 //                          console.log("success",msg);
 //                          },
@@ -133,17 +136,65 @@ var app = {
         
         
         //get transfers
-        token.getTransfers(
-                          {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq'},
-                          function(msg) {
-                          console.log("success",msg);
-                          },
-                          function(msg) {
-                          console.log("failure",msg);
-
-                          }
-                          );
+//        token.getTransfers(
+//                          {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq'},
+//                          function(msg) {
+//                          console.log("success",msg);
+//                          },
+//                          function(msg) {
+//                          console.log("failure",msg);
+//
+//                          }
+//                          );
         
+        
+        //get profile
+//                token.getProfile(
+//                                 {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq','tppMemberId':'m:9Eoc6Yda9881vKSMLTUkRViWzju:5zKtXEAq'},
+//                                  function(msg) {
+//                                  console.log("success",msg);
+//                                  },
+//                                  function(msg) {
+//                                  console.log("failure",msg);
+//
+//                                  }
+//                                  );
+        
+       //get profile picture
+//        token.getProfilePicture(
+//                         {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq','tppMemberId':'m:9Eoc6Yda9881vKSMLTUkRViWzju:5zKtXEAq'},
+//                         function(msg) {
+//                         console.log("success",msg);
+//                         },
+//                         function(msg) {
+//                         console.log("failure",msg);
+//
+//                         }
+//                         );
+//
+        //delete member
+//        token.deleteMember(
+//                                {'memberId':'m:kzPExkVTHWxscnQNhQCzD74Gdob:5zKtXEAq'},
+//                                function(msg) {
+//                                console.log("success",msg);
+//                                },
+//                                function(msg) {
+//                                console.log("failure",msg);
+//
+//                                }
+//                                );
+        
+        //cancel access token
+//                token.cancelAccessToken(
+//                                        {'memberId':'m:2z4mMsE81YEKkq5Rk89ZUSgkYxV8:5zKtXEAq','tppMemberId':'m:ChPoyz39fJzTgH8TT7ApNiKHXeS:5zKtXEAq'},
+//                                        function(msg) {
+//                                        console.log("success",msg);
+//                                        },
+//                                        function(msg) {
+//                                        console.log("failure",msg);
+//
+//                                        }
+//                                        );
     },
 
     // Update DOM on a Received Event
