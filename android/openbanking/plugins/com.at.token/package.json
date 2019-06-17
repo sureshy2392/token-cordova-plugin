@@ -1,0 +1,17 @@
+{
+  "name": "com.at.token",
+  "version": "0.1.0",
+  "description": "Wrapper for Token SDK",
+  "cordova": {
+    "id": "com.at.token",
+    "platforms": [
+      "android"
+    ]
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "cordova-android"
+  ],
+  "author": "Suresh Y",
+  "license": "AT"
+}

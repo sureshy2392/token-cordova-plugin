@@ -1,0 +1,21 @@
+{
+  "prepare_queue": {
+    "installed": [],
+    "uninstalled": []
+  },
+  "config_munge": {
+    "files": {}
+  },
+  "installed_plugins": {
+    "cordova-plugin-whitelist": {
+      "PACKAGE_NAME": "com.at.openbanking"
+    },
+    "cordova-plugin-network-information": {
+      "PACKAGE_NAME": "com.at.openbanking"
+    },
+    "com.at.token": {
+      "PACKAGE_NAME": "com.at.openbanking"
+    }
+  },
+  "dependent_plugins": {}
+}

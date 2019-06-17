@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.at.token" 
+	version="0.1.0" 
+	xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+	xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<name>Token</name>
+		  <engines>
+    <engine name="cordova" version=">=3.4.0"/>
+  </engines>
+  <asset src="www/token.js" target="js/token.js"/>
+
+	<js-module name="token" src="www/token.js">
+		<clobbers target="token" />
+	</js-module>
+	<platform name="android">
+		<config-file parent="/*" target="res/xml/config.xml">
+			<feature name="token">
+				<param name="android-package" value="com.at.token.Token" />
+			</feature>
+		</config-file>
+		 <framework custom="true" src="src/android/tokenbuild.gradle" type="gradleReference" />
+		 <framework src="com.android.support:appcompat-v7:+"/>
+		<source-file src="src/android/Token.java" target-dir="src/com/at/token/Token" />
+	</platform>
+</plugin>
+
