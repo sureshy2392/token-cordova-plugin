@@ -1,0 +1,20 @@
+
+
+
+//getAccounts response
+
+{"tokenAccountId":"a:DDmcyTDdV9EjLac1WTAJeBU2uLsMnWetix42v6pjZSqp:8QRouC2qXzi5","bankAccountNumber":"01350045","name":"ABDULLA JAWHER","supportsSendPayment":true},{"tokenAccountId":"a:FYKyDCCKqpc6fhvNVCh4oBqhR5w4i3m6wn1FB6Vo3HuP:8QRouC2qXzi5","bankAccountNumber":"9756487219875122","name":"ABDULLA JAWHER","supportsSendPayment":true},{"tokenAccountId":"a:8G1wr9SvRCrHt2EbyMcJ93FJcHEmajLjfHH8GWAT8Wdn:8QRouC2qXzi5","bankAccountNumber":"01020034","name":"ABDULLA JAWHER","supportsSendPayment":true}
+
+
+
+
+//getConsents response
+
+{"consentExpiry":"1568288297154","accountList":["a:8G1wr9SvRCrHt2EbyMcJ93FJcHEmajLjfHH8GWAT8Wdn:8QRouC2qXzi5","a:DDmcyTDdV9EjLac1WTAJeBU2uLsMnWetix42v6pjZSqp:8QRouC2qXzi5","a:FYKyDCCKqpc6fhvNVCh4oBqhR5w4i3m6wn1FB6Vo3HuP:8QRouC2qXzi5"],"tppMemberId":"m:9Eoc6Yda9881vKSMLTUkRViWzju:5zKtXEAq"},{"consentExpiry":"1568121734025","accountList":["a:8G1wr9SvRCrHt2EbyMcJ93FJcHEmajLjfHH8GWAT8Wdn:8QRouC2qXzi5","a:DDmcyTDdV9EjLac1WTAJeBU2uLsMnWetix42v6pjZSqp:8QRouC2qXzi5","a:FYKyDCCKqpc6fhvNVCh4oBqhR5w4i3m6wn1FB6Vo3HuP:8QRouC2qXzi5"],"tppMemberId":"m:ChPoyz39fJzTgH8TT7ApNiKHXeS:5zKtXEAq"}
+
+
+
+//getTransfers response
+
+
+{"created_at_ms":"1560512397492","status":"2","amountCurrency":"84.95","description":"Southside Order: ABDKH","amountVal":"EUR"},{"created_at_ms":"1560512355319","status":"2","amountCurrency":"83.96","description":"Southside Order: 6OPFF","amountVal":"EUR"}
