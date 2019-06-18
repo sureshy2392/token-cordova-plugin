@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.at.token" 
+	version="0.1.0" 
+	xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+	xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<name>Token</name>
+		  <engines>
+    <engine name="cordova" version=">=3.4.0"/>
+  </engines>
+  <asset src="www/token.js" target="js/token.js"/>
+
+	<js-module name="token" src="www/token.js">
+		<clobbers target="token" />
+	</js-module>
+	<platform name="android">
+		<config-file parent="/*" target="res/xml/config.xml">
+			<feature name="token">
+				<param name="android-package" value="com.at.token.Token" />
+			</feature>
+		</config-file>
+		 <framework custom="true" src="src/android/tokenbuild.gradle" type="gradleReference" />
+		 <framework src="com.android.support:appcompat-v7:+"/>
+		<source-file src="src/android/Token.java" target-dir="src/com/at/token/Token" />
+		<source-file src="src/android/io/token/rpc/client/Channels.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/ContextInterceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/FilterContextInterceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/Interceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/MdcAfterInterceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/MdcBeforeInterceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/Routable.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/RpcChannelFactory.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/RpcClientConfig.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/TimeoutInterceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/client/TracingInterceptor.java" target-dir="src/io/token/rpc/client/" />
+		<source-file src="src/android/io/token/rpc/spi/ManagedChannelBuilderProvider.java" target-dir="src/io/token/rpc/spi/" />
+		<source-file src="src/android/io/token/rpc/spi/ServiceLocator.java" target-dir="src/io/token/rpc/spi/" />
+
+		<source-file src="src/android/io/token/rpc/client/dagger/RpcClientsService.java" target-dir="src/io/token/rpc/client/dagger/" />
+		<source-file src="src/android/io/token/rpc/client/dagger/RpcClientsShutdownModule.java" target-dir="src/io/token/rpc/client/dagger/" />
+				<source-file src="src/android/io/token/rpc/client/healthchecks/HealthCheckingNameResolver.java" target-dir="src/io/token/rpc/client/healthchecks/" />
+
+		<source-file src="src/android/io/token/rpc/client/healthchecks/HealthCheckConfig.java" target-dir="src/io/token/rpc/client/healthchecks/" />
+		<source-file src="src/android/io/token/rpc/client/healthchecks/HealthCheckingNameResolverFactory.java" target-dir="src/io/token/rpc/client/healthchecks/" />
+		<source-file src="src/android/io/token/rpc/client/healthchecks/HealthCheckMetrics.java" target-dir="src/io/token/rpc/client/healthchecks/" />
+		<source-file src="src/android/io/token/rpc/client/healthchecks/ServerInfo.java" target-dir="src/io/token/rpc/client/healthchecks/" />
+		<source-file src="src/android/io/token/rpc/client/healthchecks/HealthChecker.java" target-dir="src/io/token/rpc/client/healthchecks/" />
+		<source-file src="src/android/io/token/rpc/client/retry/RetryController.java" target-dir="src/io/token/rpc/client/retry/" />
+		<source-file src="src/android/io/token/rpc/client/retry/RetryInterceptor.java" target-dir="src/io/token/rpc/client/retry/" />
+
+	<source-file src="src/android/io/token/rpc/client/retry/RetryPolicy.java" target-dir="src/io/token/rpc/client/retry/" />
+<source-file src="src/android/io/token/rpc/client/retry/impl/ExponentialBackoffController.java" target-dir="src/io/token/rpc/client/retry/impl/" />
+
+<source-file src="src/android/io/token/rpc/client/retry/impl/ExponentialBackoffPolicy.java" target-dir="src/io/token/rpc/client/retry/impl/" />
+
+
+
+	</platform>
+</plugin>
+
