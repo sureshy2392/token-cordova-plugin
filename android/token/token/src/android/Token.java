@@ -76,7 +76,7 @@ public class Token extends CordovaPlugin {
 //    = "m:SDytbQGUKBDcwSGKzfNttM31oBN:5zKtXEAq";
     public static final String developerKey = "4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI";
     public static final String realm = "at-bisb";
-    public static final String testRealm = "at-kfho";
+//    public static final String testRealm = "at-kfho";
 
     public static final String recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq";
     public static final AliasProtos.Alias.Type type_user = AliasProtos.Alias.Type.PHONE;
@@ -144,7 +144,7 @@ public class Token extends CordovaPlugin {
              String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
                 tokenClient = getTokenClient(context);
                 alias = getAlias(mobileNumber);
-        member_id = tokenClient.createMemberBlocking(alias).memberId();
+        member_id = tokenClient.createMemberBlocking(alias,recoveryAgent).memberId();
         System.out.println("member===="+member_id);
         callbackContext.success(member_id);
 
@@ -157,7 +157,7 @@ public class Token extends CordovaPlugin {
 
     public TokenClient getTokenClient(Context context1){
         try {
-            userAuthenticationStore = new UserAuthenticationStore(10);
+            userAuthenticationStore = new UserAuthenticationStore(1000);
             System.out.println("is authenticated======"+userAuthenticationStore.isAuthenticated());
             userAuthenticationStore.authenticateUser();
             System.out.println("is authenticated======"+userAuthenticationStore.isAuthenticated());
@@ -185,7 +185,7 @@ public class Token extends CordovaPlugin {
             alias = AliasProtos.Alias.newBuilder()
                     .setValue(mobileNumber)
                     .setType(type_user)
-                    .setRealm(testRealm)
+                    .setRealm(realm)
                     .build();
             System.out.println("alias===="+alias);
             return alias;
@@ -219,7 +219,7 @@ public class Token extends CordovaPlugin {
             String memberId = new JSONObject(args.getString(0)).getString("memberId");
             String accessToken = new JSONObject(args.getString(0)).getString("accessToken");
             Member member = tokenClient.getMemberBlocking(memberId);
-            List<Account> accounts = member.linkAccountsBlocking(testRealm,accessToken);
+            List<Account> accounts = member.linkAccountsBlocking(realm,accessToken);
             System.out.println("accounts====="+accounts);
             callbackContext.success("true");
         }catch (Exception e){
@@ -236,7 +236,7 @@ public class Token extends CordovaPlugin {
             }
             String memberId = new JSONObject(args.getString(0)).getString("memberId");
 
-            String subscriber = tokenClient.getMemberBlocking(memberId).subscribeToNotificationsBlocking(testRealm).getId();
+            String subscriber = tokenClient.getMemberBlocking(memberId).subscribeToNotificationsBlocking(realm).getId();
             callbackContext.success(subscriber);
         }catch (Exception e){
             callbackContext.error(e.toString());

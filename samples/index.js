@@ -43,7 +43,7 @@ var app = {
         
 //        //subscription call from cordova
 //        token.subscribe(
-//                        {'memberId':'m:2xX2GsxnRDE4SYYRWJw7yDHdzv3p:5zKtXEAq'},
+//                        {'memberId':'m:rR7QS4x3keacg9UhDd1XcVYe44z:5zKtXEAq'},
 //                           function(msg) {
 //                           console.log("success",msg);
 //                           },
