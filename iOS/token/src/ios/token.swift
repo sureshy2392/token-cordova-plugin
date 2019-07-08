@@ -7,7 +7,7 @@ class token: CDVPlugin {
     static let realm = "at-bisb"
     static let recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq"
     static let aliasType = Alias_Type.phone
-    static let testRealm = "at-clbh"
+   // static let testRealm = "at-bisb"
     
     struct account: Codable {
         var tokenAccountId: String
@@ -52,7 +52,7 @@ class token: CDVPlugin {
         return alias
     }
     
-    // make common variables
+    // make common vars
     
     func makeCommonVars() -> (Bool, String, CDVPluginResult, DispatchGroup) {
         let status = Bool()
@@ -129,7 +129,7 @@ class token: CDVPlugin {
         
         // subscribe to token and return subscriber id
         getTokenClient().getMember(memberId, onSuccess: { Member in
-            Member.subscribe(toNotifications: token.realm, handlerInstructions: nil, onSuccess: { Subscriber in
+            Member.subscribe(toNotifications: token.realm, handlerInstructions: [:], onSuccess: { Subscriber in
                 subscriberId = Subscriber.id_p
                 print("subscriber id is ", Subscriber.id_p)
                 dispatchGrp.leave()
@@ -184,7 +184,7 @@ class token: CDVPlugin {
         accessToken = accessToken + "|" + memberId
         
         getTokenClient().getMember(memberId, onSuccess: { Member in
-            Member.linkAccounts(token.testRealm, accessToken: accessToken, onSuccess: { accounts in
+            Member.linkAccounts(token.realm, accessToken: accessToken, onSuccess: { accounts in
                 print("accounts linked: ", accounts)
                 if accounts != nil {
                     status = true
@@ -796,11 +796,11 @@ class token: CDVPlugin {
         }
         
         getTokenClient().getMember(memberId, onSuccess: { member in
-            member.createAccessToken(builder, onSuccess: { token in
+            member.createAccessToken(builder!, onSuccess: { token in
                 print("token", token)
                 member.endorseToken(token, withKey: Key_Level.standard, onSuccess: { result in
                     member.signTokenRequestState(resultfromToken.tokenRequest.id_p, tokenId: result.token.id_p, state: resultfromToken.tokenRequest.requestPayload.callbackState, onSuccess: { _ in
-                        
+                        print("sign and endorse ta successful")
                         status = true
                         dispatchGrp.leave()
                         
@@ -823,6 +823,81 @@ class token: CDVPlugin {
                 dispatchGrp.leave()
                 
             })
+        }, onError: { Error in
+            print("error during cancel token", Error)
+            error = Error.localizedDescription
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by member: ", memberId, status)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: status
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+    }
+    
+    // approve transfer token
+    
+    @objc(approveTransferToken:)
+    func approveTransferToken(argDict: CDVInvokedUrlCommand) {
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        let memberId: String = args["memberId"] as! String
+        let payload: [AnyHashable: Any] = args["payload"] as! [AnyHashable: Any]
+        let debitAccount: String = args["account"] as! String
+        
+        let resultfromToken = TKJson.deserializeMessage(of: CreateAndEndorseToken.self, from: payload) as! CreateAndEndorseToken
+        print("resultfromToken:", resultfromToken)
+        
+        getTokenClient().getMember(memberId, onSuccess: { member in
+            var builder: TransferTokenBuilder? = member.createTransferToken(resultfromToken.tokenRequest)
+            builder?.accountId = debitAccount
+            builder?.executeAsync({ token in
+                member.endorseToken(token, withKey: Key_Level.standard, onSuccess: { result in
+                    member.signTokenRequestState(resultfromToken.tokenRequest.id_p, tokenId: result.token.id_p, state: resultfromToken.tokenRequest.requestPayload.callbackState, onSuccess: { _ in
+                        print("sign and endorse tt successful")
+                        status = true
+                        dispatchGrp.leave()
+                        
+                    }, onError: { Error in
+                        print("error:", Error)
+                        error = Error.localizedDescription
+                        dispatchGrp.leave()
+                        
+                    })
+                }, onError: { Error in
+                    print("error:", Error)
+                    error = Error.localizedDescription
+                    dispatchGrp.leave()
+                    
+                })
+            }, onError: { Error in
+                print("error:", Error)
+                error = Error.localizedDescription
+                dispatchGrp.leave()
+                
+            })
+            
         }, onError: { Error in
             print("error during cancel token", Error)
             error = Error.localizedDescription
