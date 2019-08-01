@@ -11,14 +11,7 @@ android {
             }
         }
     }
-     buildTypes {
-        release {
-            shrinkResources false
-            minifyEnabled true
-            multiDexEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
+
 
      packagingOptions {
         exclude 'META-INF/INDEX.LIST'

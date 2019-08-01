@@ -20,6 +20,7 @@ import io.token.proto.common.security.SecurityProtos;
 import io.token.proto.common.subscriber.SubscriberProtos;
 import io.token.proto.common.transfer.TransferProtos;
 import io.token.security.AKSCryptoEngineFactory;
+import io.token.security.CryptoEngine;
 import io.token.security.CryptoEngineFactory;
 import io.token.security.UserAuthenticationStore;
 import io.token.user.AccessTokenBuilder;
@@ -43,7 +44,6 @@ import android.provider.Settings;
 import android.widget.Toast;
 
 
-import com.at.openbanking.R;
 import com.google.gson.JsonArray;
 import com.google.protobuf.util.JsonFormat;
 
@@ -70,19 +70,19 @@ public class Token extends CordovaPlugin {
 
   public UserAuthenticationStore userAuthenticationStore;
     public CryptoEngineFactory cryptoEngineFactory;
+    public CryptoEngine cryptoEngine;
     public TokenClient tokenClient;
     public AliasProtos.Alias alias,bankAlias;
     public String member_id ;
-//    = "m:SDytbQGUKBDcwSGKzfNttM31oBN:5zKtXEAq";
+    public SecurityProtos.Key privilegedKey;
+    MemberProtos.MemberRecoveryOperation.Authorization authorization;
     public static final String developerKey = "4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI";
     public static final String realm = "at-bisb";
-//    public static final String testRealm = "at-kfho";
 
-    public static final String recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq";
+    public String recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq";
     public static final AliasProtos.Alias.Type type_user = AliasProtos.Alias.Type.PHONE;
     public static final AliasProtos.Alias.Type type_bank = AliasProtos.Alias.Type.BANK;
     public static final io.token.TokenClient.TokenCluster cluster = io.token.TokenClient.TokenCluster.SANDBOX;
-    public String mobileNumber ="+97339609187";
     Context context;
 
     @Override
@@ -132,7 +132,29 @@ public class Token extends CordovaPlugin {
         } else if(action.equals("approveTransferToken")){
             this.approveTransferToken(args,callbackContext);
             return true;
+        } else if(action.equals("onAccoutRevoke")){
+            this.onAccoutRevoke(args,callbackContext);
+            return true;
+        } else if(action.equals("memberRecovery")){
+            this.memberRecovery(args,callbackContext);
+            return true;
+        } else if(action.equals("getRecoveredMember")){
+            this.getRecoveredMember(args,callbackContext);
+            return true;
+        } else if(action.equals("provisionRequest")){
+            this.provisionRequest(args,callbackContext);
+            return true;
+        } else if(action.equals("provisionResponse")){
+            this.provisionResponse(args,callbackContext);
+            return true;
+        } else if(action.equals("getMember")){
+            this.getMember(args,callbackContext);
+            return true;
+        } else if(action.equals("resolveAlias")){
+            this.resolveAlias(args,callbackContext);
+            return true;
         }
+
 
         return false;
     }
@@ -144,8 +166,12 @@ public class Token extends CordovaPlugin {
              String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
                 tokenClient = getTokenClient(context);
                 alias = getAlias(mobileNumber);
+                bankAlias = getBankAlias();
+                recoveryAgent = getBankMember();
+
         member_id = tokenClient.createMemberBlocking(alias,recoveryAgent).memberId();
         System.out.println("member===="+member_id);
+        System.out.println("member===="+recoveryAgent);
         callbackContext.success(member_id);
 
         }catch(Exception e){
@@ -196,6 +222,32 @@ public class Token extends CordovaPlugin {
         }
     }
 
+   private void getMember(JSONArray args,CallbackContext callbackContext){
+        try{
+            String memberId = new JSONObject(args.getString(0)).getString("memberId");
+            tokenClient = getTokenClient(context);
+            Member member = tokenClient.getMemberBlocking(memberId);
+            callbackContext.success("true");
+        }catch (Exception e){
+            //e.printStackTrace();
+            callbackContext.error(e.toString());
+        }
+    }
+
+       private void resolveAlias(JSONArray args,CallbackContext callbackContext){
+        try{
+            String aliasValue = new JSONObject(args.getString(0)).getString("aliasValue");
+            String aliasType = new JSONObject(args.getString(0)).getString("aliasType");
+            tokenClient = getTokenClient(context);
+//            alias = getAlias(aliasType,aliasValue);
+            alias = getAlias(aliasValue);
+            String memberId = tokenClient.resolveAliasBlocking(alias).getId();
+            callbackContext.success(memberId);
+        }catch (Exception e){
+            callbackContext.error(e.toString());
+        }
+    }
+    
     public AliasProtos.Alias getBankAlias(){
         try {
             bankAlias = AliasProtos.Alias.newBuilder()
@@ -206,6 +258,16 @@ public class Token extends CordovaPlugin {
         }catch (Exception e){
             System.out.println("Exception in bank alias"+e.getMessage());
             return null;
+        }
+    }
+
+    private String getBankMember(){
+        try{
+            recoveryAgent = tokenClient.resolveAliasBlocking(bankAlias).getId();
+            System.out.println("Bank===="+recoveryAgent);
+            return recoveryAgent;
+        }catch (Exception e){
+            return e.getMessage();
         }
     }
 
@@ -492,15 +554,15 @@ public class Token extends CordovaPlugin {
 //            accountList.add("a:Gnv5qeBpdwGpLJmWQoo8RYhMz9UnaTqtG4DymvMsL7L5:8QRouC2tRGXx");
             Member member =tokenClient.getMemberBlocking(memberId);
 
-            JSONObject jsonObject1 = new JSONObject(payload);
-            JSONObject jsonObject2 = new JSONObject(jsonObject1.getString("payload"));
+//            JSONObject jsonObject1 = new JSONObject(payload);
+//            JSONObject jsonObject2 = new JSONObject(jsonObject1.getString("payload"));
 
             AccessTokenBuilder builder1;
             NotificationProtos.CreateAndEndorseToken content;
             NotificationProtos.CreateAndEndorseToken.Builder builder;
 
             builder = NotificationProtos.CreateAndEndorseToken.newBuilder();
-            JsonFormat.parser().merge(jsonObject2.toString(),builder);
+            JsonFormat.parser().merge(payload,builder);
             content = builder.build();
 
             builder1 = AccessTokenBuilder.fromTokenRequest(content.getTokenRequest());
@@ -642,20 +704,20 @@ cordova.getActivity().runOnUiThread(new Runnable() {
                 tokenClient = getTokenClient(context);
             }
             String memberId = new JSONObject(args.getString(0)).getString("memberId");
-            String tppMemberId = new JSONObject(args.getString(0)).getString("tppMemberId");
+//            String tppMemberId = new JSONObject(args.getString(0)).getString("tppMemberId");
             String payload = new JSONObject(args.getString(0)).getString("payload");
             String account = new JSONObject(args.getString(0)).getString("account");
             NotificationProtos.CreateAndEndorseToken content;
             NotificationProtos.CreateAndEndorseToken.Builder builder;
 
-            JSONObject jsonObject2 = new JSONObject(payload);
-            System.out.println("json object in per"+jsonObject2);
-            JSONObject jsonObject3 = new JSONObject(jsonObject2.getString("payload"));
-            System.out.println("json object in after payload----"+jsonObject3);
+//            JSONObject jsonObject2 = new JSONObject(payload);
+//            System.out.println("json object in per"+jsonObject2);
+//            JSONObject jsonObject3 = new JSONObject(jsonObject2.getString("payload"));
+//            System.out.println("json object in after payload----"+jsonObject3);
 
 
             builder = NotificationProtos.CreateAndEndorseToken.newBuilder();
-            JsonFormat.parser().merge(jsonObject3.toString(), builder);
+            JsonFormat.parser().merge(payload, builder);
             content = builder.build();
 
             cordova.getActivity().runOnUiThread(new Runnable() {
@@ -703,6 +765,204 @@ cordova.getActivity().runOnUiThread(new Runnable() {
             });
         } catch (Exception e){
             e.printStackTrace();
+            callbackContext.error(e.toString());
+        }
+    }
+
+   private void memberRecovery(JSONArray args,CallbackContext callbackContext){
+
+        try {
+            String memberId = new JSONObject(args.getString(0)).getString("memberId");
+            tokenClient = getTokenClient(context);
+
+            cryptoEngine = new AKSCryptoEngineFactory(context,userAuthenticationStore,true).create(memberId);
+            privilegedKey = cryptoEngine.generateKey(SecurityProtos.Key.Level.PRIVILEGED);
+            authorization = tokenClient.createRecoveryAuthorizationBlocking(memberId, privilegedKey);
+            MemberProtos.MemberRecoveryOperation.Authorization.Builder signatureBuilder = authorization.toBuilder();
+            //System.out.println("privileged key==="+privilegedKey);
+            //System.out.println("cryptoEngine key==="+cryptoEngine);
+            callbackContext.success(JsonFormat.printer().print(signatureBuilder));
+        }catch (Exception e){
+            //e.printStackTrace();
+            callbackContext.error(e.toString());
+        }
+    }
+
+  private void getRecoveredMember(JSONArray args,CallbackContext callbackContext){
+        try {
+            String mro = new JSONObject(args.getString(0)).getString("mro");
+            String memberId = new JSONObject(args.getString(0)).getString("memberId");
+            tokenClient = getTokenClient(context);
+            //System.out.println("privileged key=== in recover"+privilegedKey);
+            //System.out.println("cryptoEngine key=== in recover"+cryptoEngine);
+
+            MemberProtos.MemberRecoveryOperation.Builder mroBuilder = MemberProtos.MemberRecoveryOperation.newBuilder();
+            JsonFormat.parser().ignoringUnknownFields().merge(mro, mroBuilder);
+            Message message = mroBuilder.build();
+            MemberProtos.MemberRecoveryOperation mro1 = (MemberProtos.MemberRecoveryOperation) message;
+
+            Member recoveredMember = tokenClient.completeRecoveryBlocking(
+                    memberId,
+                    Arrays.asList(mro1),
+                    privilegedKey,
+                    cryptoEngine);
+            //System.out.println("recovered member==="+recoveredMember.memberId());
+            callbackContext.success(recoveredMember.memberId());
+
+        }catch (Exception e){
+            //e.printStackTrace();
+
+            callbackContext.error(e.toString());
+        }
+    }
+
+ private void provisionRequest(JSONArray args,CallbackContext callbackContext){
+        try {
+            String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+
+            final NotificationProtos.DeviceMetadata deviceMetadata = NotificationProtos.DeviceMetadata.newBuilder()
+                    .setApplication("token")
+                    .setDevice("android")
+                    .build();
+            tokenClient = getTokenClient(context);
+            alias = getAlias(mobileNumber);
+            tokenClient.provisionDevice(alias)
+                    .flatMap(new Function<DeviceInfo, ObservableSource<?>>() {
+                        @Override
+                        public ObservableSource<?> apply(DeviceInfo deviceInfo) throws Exception {
+                            return tokenClient.notifyAddKey(alias, deviceInfo.getKeys(), deviceMetadata);
+                        }
+                    })
+                    .subscribe(new Consumer<Object>() {
+                        @Override
+                        public void accept(Object notifyStatus) throws Exception {
+                            //System.out.println("notify status --->"+notifyStatus);
+                        }
+                    }, new Consumer<Throwable>() {
+                        @Override
+                        public void accept(Throwable onError) throws Exception {
+                            //System.out.println("onError--->"+onError.getMessage());
+                            callbackContext.error(onError.toString());
+                        }
+                    }, new Action() {
+                        @Override
+                        public void run() throws Exception {
+                            callbackContext.success("true");
+                        }
+                    });
+//            callbackContext.success("true");
+        }catch (Exception e){
+            //e.printStackTrace();
+            callbackContext.error(e.toString());
+        }
+    }
+
+    private void provisionResponse(JSONArray args,CallbackContext callbackContext) {
+        try {
+            String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+            String payload = new JSONObject(args.getString(0)).getString("payload");
+            String memberId = new JSONObject(args.getString(0)).getString("memberId");
+
+            tokenClient = getTokenClient(context);
+            alias = getAlias(mobileNumber);
+
+            NotificationProtos.AddKey.Builder builder = NotificationProtos.AddKey.newBuilder();
+            JsonFormat.parser().merge(payload, builder);
+            addkey = builder.build();
+
+            tokenClient.getMember(memberId)
+                    .subscribe(new Consumer<Member>() {
+                        @Override
+                        public void accept(Member member) throws Exception {
+                            member.approveKeys(addkey.getKeysList())
+                                    .subscribe(new Action() {
+                                        @Override
+                                        public void run() throws Exception {
+                                            callbackContext.success("true");
+                                        }
+                                    });
+                        }
+                    },onError->{
+                        callbackContext.error(onError.toString());
+                    });
+
+//            callbackContext.success("true");
+        }catch (Exception e){
+            //e.printStackTrace();
+            callbackContext.error(e.toString());
+        }
+    }
+
+
+
+private void onAccoutRevoke(JSONArray args,CallbackContext callbackContext) {
+        JSONObject jsonObject;
+        try {
+            if (tokenClient == null) {
+                tokenClient = getTokenClient(context);
+            }
+            String memberId = new JSONObject(args.getString(0)).getString("memberId");
+            String tppMemberId = new JSONObject(args.getString(0)).getString("tppMemberId");
+            JSONArray jsonArray = new JSONObject(args.getString(0)).getJSONArray("accounts");
+
+            List<String> accountList = new ArrayList<>();
+            for (int i = 0; i < jsonArray.length(); i++) {
+                accountList.add(jsonArray.getString(i));
+            }
+
+            cordova.getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    tokenClient.getMember(memberId)
+                            .subscribe(new Consumer<Member>() {
+                                @Override
+                                public void accept(final Member member1) throws Exception {
+                                    member1.getActiveAccessToken(tppMemberId)
+                                            .subscribe(new Consumer<TokenProtos.Token>() {
+                                                @Override
+                                                public void accept(TokenProtos.Token token) throws Exception {
+                                                    AccessTokenBuilder accessTokenBuilder = AccessTokenBuilder.fromPayload(token.getPayload());
+                                                    for (int i = 0; i < accountList.size(); i++) {
+                                                        accessTokenBuilder.forAccount(accountList.get(i));
+                                                        accessTokenBuilder.forAccountTransactions(accountList.get(i));
+                                                        accessTokenBuilder.forAccountBalances(accountList.get(i));
+                                                    }
+                                                    member1.replaceAccessToken(token, accessTokenBuilder)
+                                                            .subscribe(new Consumer<TokenProtos.TokenOperationResult>() {
+                                                                @Override
+                                                                public void accept(TokenProtos.TokenOperationResult replaceToken) throws Exception {
+                                                                    member1.endorseToken(replaceToken.getToken(), SecurityProtos.Key.Level.STANDARD)
+                                                                            .subscribe(new Consumer<TokenProtos.TokenOperationResult>() {
+                                                                                @Override
+                                                                                public void accept(TokenProtos.TokenOperationResult replacedToken) throws Exception {
+                                                                                    callbackContext.success("true");
+                                                                                }
+                                                                            }, new Consumer<Throwable>() {
+                                                                                @Override
+                                                                                public void accept(Throwable onError) throws Exception {
+                                                                                    callbackContext.error(onError.getMessage());
+                                                                                }
+                                                                            });
+                                                                }
+                                                            }, new Consumer<Throwable>() {
+                                                                @Override
+                                                                public void accept(Throwable onError) throws Exception {
+                                                                    callbackContext.error(onError.getMessage());
+
+                                                                }
+                                                            }, new Action() {
+                                                                @Override
+                                                                public void run() throws Exception {
+                                                                }
+                                                            });
+                                                }
+                                            });
+                                }
+                            });
+                }
+            });
+        } catch (Exception e){
+            //e.printStackTrace();
             callbackContext.error(e.toString());
         }
     }
