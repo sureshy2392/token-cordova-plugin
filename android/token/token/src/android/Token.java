@@ -12,6 +12,7 @@ import io.reactivex.ObservableSource;
 import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import io.token.DeviceInfo;
 import io.token.proto.PagedList;
 import io.token.proto.common.blob.BlobProtos;
 import io.token.proto.common.member.MemberProtos;
@@ -43,6 +44,9 @@ import android.os.Build;
 import android.provider.Settings;
 import android.widget.Toast;
 
+
+import com.google.protobuf.Message;
+import com.google.protobuf.util.JsonFormat;
 
 import com.google.gson.JsonArray;
 import com.google.protobuf.util.JsonFormat;
@@ -776,6 +780,7 @@ cordova.getActivity().runOnUiThread(new Runnable() {
             tokenClient = getTokenClient(context);
 
             cryptoEngine = new AKSCryptoEngineFactory(context,userAuthenticationStore,true).create(memberId);
+            cryptoEngine.deleteKeys();
             privilegedKey = cryptoEngine.generateKey(SecurityProtos.Key.Level.PRIVILEGED);
             authorization = tokenClient.createRecoveryAuthorizationBlocking(memberId, privilegedKey);
             MemberProtos.MemberRecoveryOperation.Authorization.Builder signatureBuilder = authorization.toBuilder();
@@ -826,6 +831,9 @@ cordova.getActivity().runOnUiThread(new Runnable() {
                     .build();
             tokenClient = getTokenClient(context);
             alias = getAlias(mobileNumber);
+            String memberId = tokenClient.resolveAliasBlocking(alias).getId();
+            cryptoEngine = new AKSCryptoEngineFactory(context,userAuthenticationStore,true).create(memberId);
+            cryptoEngine.deleteKeys();
             tokenClient.provisionDevice(alias)
                     .flatMap(new Function<DeviceInfo, ObservableSource<?>>() {
                         @Override
