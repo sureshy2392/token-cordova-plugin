@@ -407,6 +407,8 @@ public class Token extends CordovaPlugin {
                 accountObject.put("amountCurrency",tranList.get(i).getPayload().getAmount().getCurrency());
                 accountObject.put("description",tranList.get(i).getPayload().getDescription());
                 accountObject.put("amountVal",tranList.get(i).getPayload().getAmount().getValue());
+                accountObject.put("tppMemberId",tranList.get(i).getPayloadSignatures(0).getMemberId());
+
                 jsonArray.put(accountObject);
             }
             System.out.println("array===="+jsonArray);
