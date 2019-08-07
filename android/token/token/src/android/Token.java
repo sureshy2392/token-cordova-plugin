@@ -330,6 +330,7 @@ public class Token extends CordovaPlugin {
                 accountObject.put("bankAccountNumber",accounts.get(i).toProto().getAccountDetails().getIdentifier());
                 accountObject.put("name",accounts.get(i).name());
                 accountObject.put("supportsSendPayment",accounts.get(i).accountFeatures().getSupportsSendPayment());
+                accountObject.put("isLocked",accounts.get(i).isLocked());
                 jsonArray.put(accountObject);
             }
             System.out.println("array===="+jsonArray);
@@ -528,6 +529,7 @@ public class Token extends CordovaPlugin {
                 accountObject.put("bankAccountNumber",accountDetails.toProto().getAccountDetails().getIdentifier());
                 accountObject.put("name",accountDetails.name());
                 accountObject.put("supportsSendPayment",accountDetails.accountFeatures().getSupportsSendPayment());
+                accountObject.put("isLocked",accountDetails.toProto().getIsLocked());
             System.out.println("accountObject===="+accountObject);
             callbackContext.success(jsonArray.toString());
         }
