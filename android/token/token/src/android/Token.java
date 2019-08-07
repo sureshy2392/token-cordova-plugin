@@ -79,6 +79,8 @@ public class Token extends CordovaPlugin {
     public AliasProtos.Alias alias,bankAlias;
     public String member_id ;
     public SecurityProtos.Key privilegedKey;
+    NotificationProtos.AddKey addkey;
+
     MemberProtos.MemberRecoveryOperation.Authorization authorization;
     public static final String developerKey = "4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI";
     public static final String realm = "at-bisb";
