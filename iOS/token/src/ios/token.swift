@@ -51,7 +51,7 @@ class token: CDVPlugin {
     func makeAliasObject(value: String) -> Alias {
         let alias = Alias()
         alias.type = token.aliasType
-        alias.realm = token.testRealm
+        alias.realm = token.realm
         alias.value = value
         return alias
     }
@@ -189,7 +189,7 @@ class token: CDVPlugin {
         accessToken = accessToken + "|" + memberId
         
         getTokenClient().getMember(memberId, onSuccess: { Member in
-            Member.linkAccounts(token.testRealm, accessToken: accessToken, onSuccess: { accounts in
+            Member.linkAccounts(token.realm, accessToken: accessToken, onSuccess: { accounts in
                 print("accounts linked: ", accounts)
                 if accounts != nil {
                     status = true
