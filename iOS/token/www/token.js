@@ -56,4 +56,30 @@ exports.approveTransferToken = function (arg0, success, error) {
     exec(success, error, 'token', 'approveTransferToken', [arg0]);
 };
 
-//end of mappings
+exports.memberRecovery = function (arg0, success, error) {
+    exec(success, error, 'token', 'memberRecovery', [arg0]);
+};
+
+exports.getRecoveredMember = function (arg0, success, error) {
+    exec(success, error, 'token', 'getRecoveredMember', [arg0]);
+};
+
+exports.provisionRequest = function (arg0, success, error) {
+    exec(success, error, 'token', 'provisionRequest', [arg0]);
+};
+
+exports.provisionResponse = function (arg0, success, error) {
+    exec(success, error, 'token', 'provisionResponse', [arg0]);
+};
+
+exports.onAccountRevoke = function (arg0, success, error) {
+    exec(success, error, 'token', 'onAccountRevoke', [arg0]);
+};
+
+exports.resolveAlias = function (arg0, success, error) {
+    exec(success, error, 'token', 'resolveAlias', [arg0]);
+};
+
+exports.getMember = function (arg0, success, error) {
+    exec(success, error, 'token', 'getMember', [arg0]);
+};

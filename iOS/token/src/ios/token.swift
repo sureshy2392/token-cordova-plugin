@@ -7,13 +7,16 @@ class token: CDVPlugin {
     static let realm = "at-bisb"
     static let recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq"
     static let aliasType = Alias_Type.phone
-   // static let testRealm = "at-bisb"
+    static let testRealm = "at-clbh"
+    static var crypto = TKCrypto()
+    static var privilegedKey = Key()
     
     struct account: Codable {
         var tokenAccountId: String
         var bankAccountNumber: String
         var name: String
         var supportsSendPayment: Bool
+        var isLocked: Bool
     }
     
     struct transfer: Codable {
@@ -22,6 +25,7 @@ class token: CDVPlugin {
         var amountVal: String
         var amountCurrency: String
         var status: String
+        var ttpMemberId: String
     }
     
     struct consent: Codable {
@@ -47,7 +51,7 @@ class token: CDVPlugin {
     func makeAliasObject(value: String) -> Alias {
         let alias = Alias()
         alias.type = token.aliasType
-        alias.realm = token.realm
+        alias.realm = token.testRealm
         alias.value = value
         return alias
     }
@@ -67,6 +71,7 @@ class token: CDVPlugin {
     
     @objc(createMember:)
     func createMember(argDict: CDVInvokedUrlCommand) {
+        print("Inside the createMember")
         // common vars
         var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
         dispatchGrp.enter()
@@ -86,7 +91,7 @@ class token: CDVPlugin {
             dispatchGrp.leave()
         }, onError: { Error in
             print("createMember:failed", Error.localizedDescription)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -129,19 +134,19 @@ class token: CDVPlugin {
         
         // subscribe to token and return subscriber id
         getTokenClient().getMember(memberId, onSuccess: { Member in
-            Member.subscribe(toNotifications: token.realm, handlerInstructions: [:], onSuccess: { Subscriber in
+            Member.subscribe(toNotifications: token.realm, handlerInstructions:[:], onSuccess: { Subscriber in
                 subscriberId = Subscriber.id_p
                 print("subscriber id is ", Subscriber.id_p)
                 dispatchGrp.leave()
                 
             }, onError: { Error in
                 print("subcription error ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("error during subcription ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
             
         })
@@ -184,7 +189,7 @@ class token: CDVPlugin {
         accessToken = accessToken + "|" + memberId
         
         getTokenClient().getMember(memberId, onSuccess: { Member in
-            Member.linkAccounts(token.realm, accessToken: accessToken, onSuccess: { accounts in
+            Member.linkAccounts(token.testRealm, accessToken: accessToken, onSuccess: { accounts in
                 print("accounts linked: ", accounts)
                 if accounts != nil {
                     status = true
@@ -193,12 +198,12 @@ class token: CDVPlugin {
                 }
             }, onError: { Error in
                 print("error during linking ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during linking ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -208,7 +213,7 @@ class token: CDVPlugin {
             if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: "true"
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -246,7 +251,8 @@ class token: CDVPlugin {
                         tokenAccountId: accountElement.id,
                         bankAccountNumber: accountElement.accountDetails.identifier,
                         name: accountElement.name,
-                        supportsSendPayment: accountElement.accountFeatures!.supportsSendPayment
+                        supportsSendPayment: accountElement.accountFeatures!.supportsSendPayment,
+                        isLocked: accountElement.isLocked
                     )
                     do {
                         let jsonData = try jsonEncoder.encode(accountStruct)
@@ -262,12 +268,12 @@ class token: CDVPlugin {
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during fetching linked accounts ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during fetching linked accounts ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -316,7 +322,8 @@ class token: CDVPlugin {
                     tokenAccountId: TKAccount.id,
                     bankAccountNumber: TKAccount.accountDetails.identifier,
                     name: TKAccount.name,
-                    supportsSendPayment: TKAccount.accountFeatures!.supportsSendPayment
+                    supportsSendPayment: TKAccount.accountFeatures!.supportsSendPayment,
+                    isLocked: TKAccount.isLocked
                 )
                 
                 let jsonData = try! jsonEncoder.encode(accountStruct)
@@ -327,13 +334,13 @@ class token: CDVPlugin {
                 
             }, onError: { Error in
                 print("error during fetching linked accounts ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
             
         }, onError: { Error in
             print("error during fetching linked accounts ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -409,12 +416,12 @@ class token: CDVPlugin {
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during fetching consents ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during fetching consents ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -456,14 +463,15 @@ class token: CDVPlugin {
         getTokenClient().getMember(memberId, onSuccess: { member in
             member.getTransfersOffset("NULL", limit: 100, tokenId: nil, onSuccess: { transferlist in
                 for transferElement in transferlist.items {
+                    let ttpId = (transferElement.payloadSignaturesArray![0] as! Signature)
                     var transferStruct = transfer.init(
                         created_at_ms: String(transferElement.createdAtMs),
                         description: transferElement.payload.description_p,
                         amountVal: transferElement.payload.amount.currency,
                         amountCurrency: transferElement.payload.amount.value,
-                        status: String(transferElement.status.rawValue)
+                        status: String(transferElement.status.rawValue),
+                        ttpMemberId:ttpId.memberId
                     )
-                    
                     do {
                         let jsonData = try jsonEncoder.encode(transferStruct)
                         let jsonString = String(data: jsonData, encoding: .utf8)
@@ -477,12 +485,12 @@ class token: CDVPlugin {
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during fetching transfers ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during fetching transfers ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -523,17 +531,22 @@ class token: CDVPlugin {
         getTokenClient().getMember(memberId, onSuccess: { member in
             member.getProfile(tppMemberId, onSuccess: { profile in
                 print("fetched profile: ", profile)
-                tppName = profile.displayNameFirst
+                if(!profile.displayNameFirst.isEmpty)
+                {
+                    tppName = profile.displayNameFirst
+                }else{
+                    tppName = ""
+                }
                 status = true
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during fetching profile ", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during fetching profile ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -567,24 +580,27 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var memberId: String = args["memberId"] as! String
-        var tppMemberId: String = args["tppMemberId"] as! String
+        let memberId: String = args["memberId"] as! String
+        let tppMemberId: String = args["tppMemberId"] as! String
         var tppPic = Data()
         
         getTokenClient().getMember(memberId, onSuccess: { member in
             member.getProfilePicture(tppMemberId, size: ProfilePictureSize(rawValue: 2)!, onSuccess: { profilePic in
                 print("fetched profile pic: ", profilePic)
-                tppPic = (profilePic?.payload.data_p)!
+                if(profilePic!.hasPayload)
+                {
+                    tppPic = (profilePic?.payload.data_p)!
+                }
                 status = true
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during fetching profile pic", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during fetching profile pic", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -620,8 +636,8 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var memberId: String = args["memberId"] as! String
-        var unlinkAccountlist: [String] = args["accounts"] as! [String]
+        let memberId: String = args["memberId"] as! String
+        let unlinkAccountlist: [String] = args["accounts"] as! [String]
         
         getTokenClient().getMember(memberId, onSuccess: { member in
             member.unlinkAccounts(unlinkAccountlist, onSuccess: {
@@ -630,12 +646,12 @@ class token: CDVPlugin {
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during unlinking", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during unlink ", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -645,7 +661,7 @@ class token: CDVPlugin {
             if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: "true"
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -671,7 +687,7 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var memberId: String = args["memberId"] as! String
+        let memberId: String = args["memberId"] as! String
         
         getTokenClient().getMember(memberId, onSuccess: { member in
             member.delete({
@@ -680,12 +696,12 @@ class token: CDVPlugin {
                 dispatchGrp.leave()
             }, onError: { Error in
                 print("error during delete member", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during member delete", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -695,7 +711,7 @@ class token: CDVPlugin {
             if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: "true"
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -721,8 +737,8 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var memberId: String = args["memberId"] as! String
-        var tppMemberId: String = args["tppMemberId"] as! String
+        let memberId: String = args["memberId"] as! String
+        let tppMemberId: String = args["tppMemberId"] as! String
         
         getTokenClient().getMember(memberId, onSuccess: { member in
             member.getActiveAccessToken(tppMemberId, onSuccess: { Token in
@@ -733,18 +749,18 @@ class token: CDVPlugin {
                     
                 }, onError: { Error in
                     print("error during cancel token", Error)
-                    error = Error.localizedDescription
+                    error = Error as! String
                     dispatchGrp.leave()
                 })
                 
             }, onError: { Error in
                 print("error during cancel token", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
             })
         }, onError: { Error in
             print("member lookup error during cencel token", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
         })
         
@@ -754,7 +770,7 @@ class token: CDVPlugin {
             if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: "true"
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -783,6 +799,7 @@ class token: CDVPlugin {
         let memberId: String = args["memberId"] as! String
         let payload: [AnyHashable: Any] = args["payload"] as! [AnyHashable: Any]
         let approvedAccounts: [String] = args["accounts"] as! [String]
+        let ttpMemberId: String = args["ttpMemberId"] as! String
         
         let resultfromToken = TKJson.deserializeMessage(of: CreateAndEndorseToken.self, from: payload) as! CreateAndEndorseToken
         print("resultfromToken::", resultfromToken)
@@ -796,38 +813,65 @@ class token: CDVPlugin {
         }
         
         getTokenClient().getMember(memberId, onSuccess: { member in
-            member.createAccessToken(builder!, onSuccess: { token in
-                print("token", token)
-                member.endorseToken(token, withKey: Key_Level.standard, onSuccess: { result in
-                    member.signTokenRequestState(resultfromToken.tokenRequest.id_p, tokenId: result.token.id_p, state: resultfromToken.tokenRequest.requestPayload.callbackState, onSuccess: { _ in
-                        print("sign and endorse ta successful")
-                        status = true
-                        dispatchGrp.leave()
-                        
+            
+            member.getActiveAccessToken(ttpMemberId, onSuccess: { token in
+                print("token",token)
+                member.replaceAccessToken(token, accessTokenBuilder: builder!, onSuccess: { (TokenOperationResult) in
+                    member.endorseToken(TokenOperationResult.token, withKey:Key_Level.standard , onSuccess: { result in
+                        member.signTokenRequestState(resultfromToken.tokenRequest.id_p, tokenId: result.token.id_p, state:(resultfromToken.tokenRequest.requestPayload.callbackState)!, onSuccess: {_ in
+                            status = true
+                            dispatchGrp.leave()
+                        }, onError: { Error in
+                            print("error during cancel token", Error)
+                            error = Error as! String
+                            dispatchGrp.leave()
+                        })
                     }, onError: { Error in
                         print("error during cancel token", Error)
-                        error = Error.localizedDescription
+                        error = Error as! String
                         dispatchGrp.leave()
                         
                     })
+                    
                 }, onError: { Error in
                     print("error during cancel token", Error)
-                    error = Error.localizedDescription
+                    error = Error as! String
                     dispatchGrp.leave()
                     
                 })
-                
             }, onError: { Error in
-                print("error during cancel token", Error)
-                error = Error.localizedDescription
-                dispatchGrp.leave()
-                
+                member.createAccessToken(builder!, onSuccess: { token in
+                    print("token", token)
+                    member.endorseToken(token, withKey: Key_Level.standard, onSuccess: { result in
+                        member.signTokenRequestState(resultfromToken.tokenRequest.id_p, tokenId: result.token.id_p, state: resultfromToken.tokenRequest.requestPayload.callbackState, onSuccess: { _ in
+                            
+                            status = true
+                            dispatchGrp.leave()
+                            
+                        }, onError: { Error in
+                            print("error during cancel token", Error)
+                            error = Error as! String
+                            dispatchGrp.leave()
+                            
+                        })
+                    }, onError: { Error in
+                        print("error during cancel token", Error)
+                        error = Error as! String
+                        dispatchGrp.leave()
+                        
+                    })
+                    
+                }, onError: { Error in
+                    print("error during cancel token", Error)
+                    error = Error as! String
+                    dispatchGrp.leave()
+                    
+                })
             })
         }, onError: { Error in
             print("error during cancel token", Error)
-            error = Error.localizedDescription
+            error = Error as! String
             dispatchGrp.leave()
-            
         })
         
         // wait for async and notify main
@@ -836,7 +880,7 @@ class token: CDVPlugin {
             if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: "true"
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -850,6 +894,7 @@ class token: CDVPlugin {
             )
         }
     }
+    
     
     // approve transfer token
     
@@ -865,6 +910,7 @@ class token: CDVPlugin {
         let memberId: String = args["memberId"] as! String
         let payload: [AnyHashable: Any] = args["payload"] as! [AnyHashable: Any]
         let debitAccount: String = args["account"] as! String
+        let ttpMemberId: String = args["ttpMemberId"] as! String
         
         let resultfromToken = TKJson.deserializeMessage(of: CreateAndEndorseToken.self, from: payload) as! CreateAndEndorseToken
         print("resultfromToken:", resultfromToken)
@@ -881,26 +927,26 @@ class token: CDVPlugin {
                         
                     }, onError: { Error in
                         print("error:", Error)
-                        error = Error.localizedDescription
+                        error = Error as! String
                         dispatchGrp.leave()
                         
                     })
                 }, onError: { Error in
                     print("error:", Error)
-                    error = Error.localizedDescription
+                    error = Error as! String
                     dispatchGrp.leave()
                     
                 })
             }, onError: { Error in
                 print("error:", Error)
-                error = Error.localizedDescription
+                error = Error as! String
                 dispatchGrp.leave()
                 
             })
             
         }, onError: { Error in
-            print("error during cancel token", Error)
-            error = Error.localizedDescription
+            print("error during approveAccessToken token", Error)
+            error = Error as! String
             dispatchGrp.leave()
             
         })
@@ -911,7 +957,7 @@ class token: CDVPlugin {
             if status == true {
                 pluginResult = CDVPluginResult(
                     status: CDVCommandStatus_OK,
-                    messageAs: status
+                    messageAs: "true"
                 )
             } else {
                 pluginResult = CDVPluginResult(
@@ -925,4 +971,396 @@ class token: CDVPlugin {
             )
         }
     }
+    
+    //memberRecovery
+    @objc(memberRecovery:)
+    func memberRecovery(argDict: CDVInvokedUrlCommand)
+    {
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        var auth = String()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        let memberId: String = args["memberId"] as! String
+        token.crypto = getTokenClient().createCrypto(memberId)
+        token.privilegedKey = token.crypto.generateKey(Key_Level.privileged)
+        getTokenClient().createRecoveryAuthorization(memberId, key: token.privilegedKey, onSuccess: { authorization in
+            auth = TKJson.serialize(authorization)
+            status = true
+            dispatchGrp.leave()
+            
+        }, onError: { Error in
+            print("error:", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by auth: ", auth)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: auth
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+    }
+    
+    //Get Recovered Member
+    
+    @objc (getRecoveredMember:)
+    func getRecoveredMember(argDict: CDVInvokedUrlCommand)
+    {
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        var recoveredMemberId = String()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        let memberId: String = args["memberId"] as! String
+        let memberRecoveryOperator : String = args["mro"] as! String
+        
+        var mro = TKJson.deserializeMessage(of: MemberRecoveryOperation.self, fromJSON:memberRecoveryOperator) as! MemberRecoveryOperation
+        print("In getRecoveredMember privilegedKey:::",token.privilegedKey)
+        print("In getRecoveredMember crypto:::",token.crypto)
+        getTokenClient().completeRecovery(memberId, recoveryOperations: [mro], privilegedKey: token.privilegedKey, crypto: token.crypto, onSuccess: { recoveredMember in
+            recoveredMemberId = recoveredMember.id
+            status = true
+            dispatchGrp.leave()
+            
+        }, onError: { Error in
+            print("error:", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by getRecoveredMember: ", recoveredMemberId)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: recoveredMemberId
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+        
+        
+    }
+    
+    @objc(provisionRequest:)
+    func provisionRequest(argDict: CDVInvokedUrlCommand){
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        var mobileNumber: String = args["mobileNumber"] as! String
+        var metadata = DeviceMetadata()
+        metadata.application = "token"
+        metadata.device = "iPhone"
+        getTokenClient().provisionDevice(makeAliasObject(value: mobileNumber), onSuccess: { deviceInfo in
+            
+            self.getTokenClient().notifyAddKey(self.makeAliasObject(value: mobileNumber), keys: deviceInfo.keys, deviceMetadata:
+                metadata, onSuccess: {
+                    
+                    status = true
+                    dispatchGrp.leave()
+                    
+            }, onError: { Error in
+                print("error:", Error)
+                error = Error as! String
+                dispatchGrp.leave()
+                
+            })
+            
+        }, onError: { Error in
+            print("error:", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by provision request: ", status)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: "true"
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+        
+    }
+    
+    @objc (provisionResponse:)
+    func provisionResponse(argDict: CDVInvokedUrlCommand){
+        
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        dispatchGrp.enter()
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        var mobileNumber: String = args["mobileNumber"] as! String
+        let memberId: String = args["memberId"] as! String
+        let payload: [AnyHashable: Any] = args["payload"] as! [AnyHashable: Any]
+        
+        let resultfromToken = TKJson.deserializeMessage(of: AddKey.self, from:payload) as! AddKey
+        
+        getTokenClient().getMember(memberId, onSuccess: { member in
+            
+            member.approve(resultfromToken.keysArray as! [Key], onSuccess: {
+                
+                status = true
+                dispatchGrp.leave()
+                
+            }, onError: { Error in
+                print("error during provisionResponse", Error)
+                error = Error as! String
+                dispatchGrp.leave()
+                
+            })
+        }, onError: { Error in
+            print("error during provisionResponse", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by provision response: ", status)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: "true"
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+    }
+    
+    @objc(onAccountRevoke:)
+    func onAccountRevoke(argDict: CDVInvokedUrlCommand){
+        
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        let memberId: String = args["memberId"] as! String
+        let accountsTorevoke: [String] = args["accounts"] as! [String]
+        let ttpMemberId: String = args["ttpMemberId"] as! String
+        let resources : AccessBody_Resource
+        
+        
+        getTokenClient().getMember(memberId, onSuccess: { member in
+            member.getActiveAccessToken(ttpMemberId, onSuccess:{token in
+                
+                let builder = AccessTokenBuilder.fromPayload(token.payload)
+                accountsTorevoke.forEach{ accountId in
+                    builder!.forAccount(accountId)
+                    builder!.forAccountBalances(accountId)
+                    builder!.forAccountTransactions(accountId)
+                }
+                
+                member.replaceAccessToken(token, accessTokenBuilder: builder!, onSuccess: { TokenOperationResult in
+                    member.endorseToken(TokenOperationResult.token, withKey: Key_Level.standard, onSuccess: { result in
+                        
+                        status = true
+                        dispatchGrp.leave()
+                        
+                    }, onError:{ Error in
+                        print("error during provisionResponse", Error)
+                        error = Error as! String
+                        dispatchGrp.leave()
+                    })
+                }, onError: { Error in
+                    print("error during onAccountRevoke membercheck", Error)
+                    error = Error as! String
+                    dispatchGrp.leave()
+                    
+                })
+            }, onError:{ Error in
+                print("error during provisionResponse", Error)
+                error = Error as! String
+                dispatchGrp.leave()
+            })
+        }, onError: { Error in
+            print("error during onAccountRevoke membercheck", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by onAccountRevoke: ", status)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs: "true"
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+        
+    }
+    
+    @objc(resolveAlias:)
+    func resolveAlias(argDict: CDVInvokedUrlCommand){
+        
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        let mobileNumber: String = args["mobileNumber"] as! String
+        var memberId = String()
+        
+        getTokenClient().getMemberId(makeAliasObject(value: mobileNumber), onSuccess: { member in
+            status = true
+            memberId = member!
+            dispatchGrp.leave()
+        }, onError: { Error in
+            print("error during  resolveAlias", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by resolveAlias: ", status)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs:memberId
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+        
+    }
+    
+    @objc(getMember:)
+    func getMember(argDict: CDVInvokedUrlCommand){
+        
+        // common vars
+        var (status, error, pluginResult, dispatchGrp) = makeCommonVars()
+        dispatchGrp.enter()
+        
+        // read from args
+        var args = argDict.arguments![0] as! [String: Any]
+        print("received dict arguments", args)
+        let memberId : String = args["memberId"] as! String
+        
+        getTokenClient().getMember(memberId, onSuccess: { member in
+            status = true
+            dispatchGrp.leave()
+        }, onError: { Error in
+            print("error during getMember", Error)
+            error = Error as! String
+            dispatchGrp.leave()
+            
+        })
+        
+        // wait for async and notify main
+        dispatchGrp.notify(queue: .main) {
+            print("main notified by getMember: ", status)
+            if status == true {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_OK,
+                    messageAs:"true"
+                )
+            } else {
+                pluginResult = CDVPluginResult(
+                    status: CDVCommandStatus_ERROR,
+                    messageAs: error
+                )
+            }
+            self.commandDelegate!.send(
+                pluginResult,
+                callbackId: argDict.callbackId
+            )
+        }
+        
+        
+    }
+    
+    
 }
+
