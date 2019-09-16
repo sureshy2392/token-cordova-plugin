@@ -169,15 +169,17 @@ public class Token extends CordovaPlugin {
           JSONObject jsonObject;
           try {
              System.out.println("args======"+args.getString(0));
-             String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+             //String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+                String aliasValue = new JSONObject(args.getString(0)).getString("aliasValue");
+                String aliasType = new JSONObject(args.getString(0)).getString("aliasType");
                 tokenClient = getTokenClient(context);
-                alias = getAlias(mobileNumber);
+                alias = getAlias(aliasType,aliasValue);
                 bankAlias = getBankAlias();
                 recoveryAgent = getBankMember();
 
         member_id = tokenClient.createMemberBlocking(alias,recoveryAgent).memberId();
-        System.out.println("member===="+member_id);
-        System.out.println("member===="+recoveryAgent);
+//         System.out.println("member===="+member_id);
+//         System.out.println("member===="+recoveryAgent);
         callbackContext.success(member_id);
 
         }catch(Exception e){
@@ -211,11 +213,17 @@ public class Token extends CordovaPlugin {
         }
     }
 
-    public AliasProtos.Alias getAlias(String mobileNumber){
-
+    public AliasProtos.Alias getAlias(String aliasType,String aliasValue){
         try {
+            if(aliasType.equalsIgnoreCase("CUSTOM")) {
+                type_user = AliasProtos.Alias.Type.CUSTOM;
+            } else if(aliasType.equalsIgnoreCase("PHONE")) {
+                type_user = AliasProtos.Alias.Type.PHONE;
+            } else if(aliasType.equalsIgnoreCase("EMAIL")) {
+                type_user = AliasProtos.Alias.Type.EMAIL;
+            }
             alias = AliasProtos.Alias.newBuilder()
-                    .setValue(mobileNumber)
+                    .setValue(aliasValue)
                     .setType(type_user)
                     .setRealm(realm)
                     .build();
@@ -829,14 +837,16 @@ cordova.getActivity().runOnUiThread(new Runnable() {
 
  private void provisionRequest(JSONArray args,CallbackContext callbackContext){
         try {
-            String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+//             String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+            String aliasValue = new JSONObject(args.getString(0)).getString("aliasValue");
+            String aliasType = new JSONObject(args.getString(0)).getString("aliasType");
 
             final NotificationProtos.DeviceMetadata deviceMetadata = NotificationProtos.DeviceMetadata.newBuilder()
                     .setApplication("token")
                     .setDevice("android")
                     .build();
             tokenClient = getTokenClient(context);
-            alias = getAlias(mobileNumber);
+            alias = getAlias(aliasType,aliasValue);
             String memberId = tokenClient.resolveAliasBlocking(alias).getId();
             cryptoEngine = new AKSCryptoEngineFactory(context,userAuthenticationStore,true).create(memberId);
             cryptoEngine.deleteKeys();
@@ -873,12 +883,14 @@ cordova.getActivity().runOnUiThread(new Runnable() {
 
     private void provisionResponse(JSONArray args,CallbackContext callbackContext) {
         try {
-            String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+//             String mobileNumber = new JSONObject(args.getString(0)).getString("mobileNumber");
+            String aliasValue = new JSONObject(args.getString(0)).getString("aliasValue");
+            String aliasType = new JSONObject(args.getString(0)).getString("aliasType");
             String payload = new JSONObject(args.getString(0)).getString("payload");
             String memberId = new JSONObject(args.getString(0)).getString("memberId");
 
             tokenClient = getTokenClient(context);
-            alias = getAlias(mobileNumber);
+            alias = getAlias(aliasType,aliasValue);
 
             NotificationProtos.AddKey.Builder builder = NotificationProtos.AddKey.newBuilder();
             JsonFormat.parser().merge(payload, builder);
