@@ -5,9 +5,9 @@ class token: CDVPlugin {
     static let developerKey: String = "4qY7lqQw8NOl9gng0ZHgT4xdiDqxqoGVutuZwrUYQsI"
     static let env: TokenCluster = TokenCluster.sandbox()
     static let realm = "at-bisb"
-    static let recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq"
-    static let aliasType = Alias_Type.phone
-    static let testRealm = "at-clbh"
+    // static let recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq"
+    static let recoveryAliasType = Alias_Type.bank
+    // static let testRealm = "at-clbh"
     static var crypto = TKCrypto()
     static var privilegedKey = Key()
     
@@ -48,13 +48,45 @@ class token: CDVPlugin {
     
     // create and return an alias object
     
-    func makeAliasObject(value: String) -> Alias {
+    func makeAliasObject(value: String,type: String) -> Alias {
         let alias = Alias()
-        alias.type = token.aliasType
+        if(type == "CUSTOM")
+        {
+            alias.type = Alias_Type.custom
+        }
+        if(type == "PHONE")
+        {
+            alias.type = Alias_Type.phone
+        }
+        if(type == "EMAIL")
+        {
+            alias.type = Alias_Type.email
+        }
         alias.realm = token.realm
         alias.value = value
         return alias
     }
+    
+    // get recover agent alias
+    
+    func makeRecoverAliasObject() -> Alias {
+        let alias = Alias()
+        alias.type = token.recoveryAliasType
+        alias.realm = token.realm
+        return alias
+    }
+    
+    // get bank memberId
+    func getRecoveryAgentId() -> String {
+        var recoveryAgentMemberId = String()
+        getTokenClient().getMemberId(makeRecoverAliasObject(), onSuccess: { memberId in
+            recoveryAgentMemberId = memberId!
+        }) { (Error) in
+            
+        }
+        return recoveryAgentMemberId
+    }
+    
     
     // make common vars
     
@@ -79,13 +111,14 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var mobileNumber: String = args["mobileNumber"] as! String
+        let aliasType: String = args["aliasType"] as! String
+        let aliasValue: String = args["aliasValue"] as! String
         
         // method specific vars
         var memberId = String()
         
         // create a member and return member id
-        getTokenClient().createMember(makeAliasObject(value: mobileNumber), recoveryAgent: token.recoveryAgent, onSuccess: { TKMember in
+        getTokenClient().createMember(makeAliasObject(value: aliasValue,type:aliasType), recoveryAgent:getRecoveryAgentId(), onSuccess: { TKMember in
             print("createMember:success", TKMember.id)
             memberId = TKMember.id
             dispatchGrp.leave()
@@ -1085,13 +1118,14 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var mobileNumber: String = args["mobileNumber"] as! String
-        var metadata = DeviceMetadata()
+        let aliasType: String = args["aliasType"] as! String
+        let aliasValue : String = args["aliasValue"] as! String
+        let metadata = DeviceMetadata()
         metadata.application = "token"
         metadata.device = "iPhone"
-        getTokenClient().provisionDevice(makeAliasObject(value: mobileNumber), onSuccess: { deviceInfo in
+        getTokenClient().provisionDevice(makeAliasObject(value: aliasValue,type:aliasType), onSuccess: { deviceInfo in
             
-            self.getTokenClient().notifyAddKey(self.makeAliasObject(value: mobileNumber), keys: deviceInfo.keys, deviceMetadata:
+            self.getTokenClient().notifyAddKey(self.makeAliasObject(value: aliasValue,type:aliasType), keys: deviceInfo.keys, deviceMetadata:
                 metadata, onSuccess: {
                     
                     status = true
@@ -1143,7 +1177,8 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        var mobileNumber: String = args["mobileNumber"] as! String
+        var aliasType: String = args["aliasType"] as! String
+        var aliasValue: String = args["aliasValue"] as! String
         let memberId: String = args["memberId"] as! String
         let payload: [AnyHashable: Any] = args["payload"] as! [AnyHashable: Any]
         
@@ -1279,10 +1314,11 @@ class token: CDVPlugin {
         // read from args
         var args = argDict.arguments![0] as! [String: Any]
         print("received dict arguments", args)
-        let mobileNumber: String = args["mobileNumber"] as! String
+        let aliasType: String = args["aliasType"] as! String
+        let aliasValue: String = args["aliasValue"] as! String
         var memberId = String()
         
-        getTokenClient().getMemberId(makeAliasObject(value: mobileNumber), onSuccess: { member in
+        getTokenClient().getMemberId(makeAliasObject(value: aliasValue,type:aliasType), onSuccess: { member in
             status = true
             memberId = member!
             dispatchGrp.leave()
@@ -1363,4 +1399,5 @@ class token: CDVPlugin {
     
     
 }
+
 
