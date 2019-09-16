@@ -32,6 +32,7 @@ var app = {
         //create member call from cordova
 //        token.createMember(
 //                           {'mobileNumber':'+97333263351'},
+                            {'aliasType':'CUSTOM','aliasValue':'123456789'},
 //                           function(msg) {
 //                           console.log("success",msg);
 //                           },
