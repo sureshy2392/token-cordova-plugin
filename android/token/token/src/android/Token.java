@@ -47,12 +47,12 @@ import android.widget.Toast;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
-
 import com.google.gson.JsonArray;
-import com.google.protobuf.util.JsonFormat;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 
 // import okhttp3.Call;
