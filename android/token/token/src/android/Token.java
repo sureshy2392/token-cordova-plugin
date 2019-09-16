@@ -86,7 +86,7 @@ public class Token extends CordovaPlugin {
     public static final String realm = "at-bisb";
 
     public String recoveryAgent = "m:4A6NpTk5XS3GuUEdjMZSTEWpjKD6:5zKtXEAq";
-    public static final AliasProtos.Alias.Type type_user = AliasProtos.Alias.Type.PHONE;
+    public AliasProtos.Alias.Type type_user;
     public static final AliasProtos.Alias.Type type_bank = AliasProtos.Alias.Type.BANK;
     public static final io.token.TokenClient.TokenCluster cluster = io.token.TokenClient.TokenCluster.SANDBOX;
     Context context;
