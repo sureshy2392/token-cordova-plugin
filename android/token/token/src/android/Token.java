@@ -253,8 +253,8 @@ public class Token extends CordovaPlugin {
             String aliasValue = new JSONObject(args.getString(0)).getString("aliasValue");
             String aliasType = new JSONObject(args.getString(0)).getString("aliasType");
             tokenClient = getTokenClient(context);
-//            alias = getAlias(aliasType,aliasValue);
-            alias = getAlias(aliasValue);
+           alias = getAlias(aliasType,aliasValue);
+//             alias = getAlias(aliasValue);
             String memberId = tokenClient.resolveAliasBlocking(alias).getId();
             callbackContext.success(memberId);
         }catch (Exception e){
