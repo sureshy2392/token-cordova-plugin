@@ -849,7 +849,7 @@ cordova.getActivity().runOnUiThread(new Runnable() {
             alias = getAlias(aliasType,aliasValue);
             String memberId = tokenClient.resolveAliasBlocking(alias).getId();
             cryptoEngine = new AKSCryptoEngineFactory(context,userAuthenticationStore,true).create(memberId);
-            cryptoEngine.deleteKeys();
+//             cryptoEngine.deleteKeys();
             tokenClient.provisionDevice(alias)
                     .flatMap(new Function<DeviceInfo, ObservableSource<?>>() {
                         @Override
