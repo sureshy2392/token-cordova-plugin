@@ -628,7 +628,7 @@ cordova.getActivity().runOnUiThread(new Runnable() {
 
                                                                                  }
                                                                              }
-                                                        ).dispose();
+                                                        );
                                                     }
                                                 }, new Consumer<Throwable>() {
                                                     @Override
