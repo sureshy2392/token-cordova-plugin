@@ -1,6 +1,6 @@
 {
   "name": "com-token",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "description": "token sdk plugin ",
   "cordova": {
     "id": "com-token",
