@@ -204,6 +204,7 @@ public class Token extends CordovaPlugin {
                         .devKey(developerKey)
                         .withCryptoEngine(cryptoEngineFactory)
                         .connectTo(cluster)
+                        .timeout(20000)
                         .build();
             }
             System.out.println("token client"+tokenClient);
