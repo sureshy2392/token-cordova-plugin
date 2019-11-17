@@ -93,7 +93,7 @@ exports.getMember = function (arg0, success, error) {
     exec(success, error, 'token', 'getMember', [arg0]);
 };
 
-exports.onAccoutRevoke = function (arg0, success, error) {
-    exec(success, error, 'token', 'onAccoutRevoke', [arg0]);
+exports.onAccountRevoke = function (arg0, success, error) {
+    exec(success, error, 'token', 'onAccountRevoke', [arg0]);
 };
 
