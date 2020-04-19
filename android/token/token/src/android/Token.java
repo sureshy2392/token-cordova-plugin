@@ -796,6 +796,12 @@ cordova.getActivity().runOnUiThread(new Runnable() {
 
             cryptoEngine = new AKSCryptoEngineFactory(context,userAuthenticationStore,true).create(memberId);
 //             cryptoEngine.deleteKeys();
+            
+             try{
+                cryptoEngine.deleteKeys();
+            }catch(Exception e){
+                System.out.println("error while deleting the keys"+e);
+            }
             privilegedKey = cryptoEngine.generateKey(SecurityProtos.Key.Level.PRIVILEGED);
             authorization = tokenClient.createRecoveryAuthorizationBlocking(memberId, privilegedKey);
             MemberProtos.MemberRecoveryOperation.Authorization.Builder signatureBuilder = authorization.toBuilder();
